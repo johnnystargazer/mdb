@@ -1,0 +1,156 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+option java_package = "com.dashur.mdb";
+
+package feed;
+
+service ProtoService {
+
+  rpc One(Request) returns (google.protobuf.Empty) {}
+  
+  rpc Many(stream Request) returns (google.protobuf.Empty) {}
+
+}
+
+message Request {
+  repeated string path = 1;
+  bytes protobuf = 2;
+}
+message TransactionType {
+    enum Type {
+        UNKNOWN = 0;
+        CREDIT = 1;
+        DEBIT = 2;
+    }
+}
+message TransactionCategory {
+    enum Category {
+        UNKNOWN = 0;
+        WAGER = 1;
+        PAYOUT = 2;
+        REFUND = 3;
+        LOYALTY = 4;
+        COMMISSION = 5;
+        TRANSFER = 6;
+        SETTLEMENT = 7;
+        DEPOSIT = 8;
+        WITHDRAWAL = 9;
+        ADJUSTMENT = 10;
+        BUY = 11;
+        SELL = 12;
+        ENDROUND = 13;
+    }
+}
+
+message OperatingSystem {
+    enum Os {
+        UNKNOWN = 0;
+        WIN		= 1;
+        IOS     = 2;
+        ANDROID = 3;
+        LINUX   = 4;
+        OSX     = 5;
+        BSD     = 6;
+    }
+}
+
+message Platform {
+    enum Type {
+        UNKNOWN = 0;
+        HTML5 = 1;
+        FLASH = 2;
+        NATIVE = 3;
+    }
+}
+
+message DeviceType {
+    enum Type {
+        UNKNOWN = 0;
+        MOBILE = 1;
+        TABLET = 2;
+        DESKTOP = 3;
+        TV = 4;
+    }
+}
+message Browser {
+    enum Type {
+        UNKNOWN = 0;
+        FIREFOX = 1;
+        CHROME = 2;
+        CHROME_MOBILE = 3;
+        SAFARI = 4;
+        SAFARI_MOBILE = 5;
+        IE = 6;
+        EDGE = 7;
+        ANDROID_NATIVE = 8;
+        QQ_BROWSER = 9;
+        NONE = 10;
+        QQ_BROWSER_MOBILE = 11;
+        UC_BROWSER = 12;
+    }
+}
+
+message BalanceType {
+    enum Type {
+        UNKNOWN = 0;
+        CREDIT_BALANCE = 1;
+        CASH_BALANCE = 2;
+    }
+}
+
+message Money {
+    string currency_unit = 1;
+    int64  amount = 2;
+}
+
+message Transaction {
+    int64 id = 1;
+    int64 created_by = 4;
+    google.protobuf.Timestamp created = 5;
+    string tx_id = 8;
+    int64 application_id = 9;
+    int64 parent_transaction_id = 21 ;
+    int64 account_id = 22 ;
+    int64 company_id = 23 ;
+    int64 wallet_id = 24 ;
+    string wallet_code = 25 ;
+    TransactionCategory.Category category  = 26;
+    string sub_category = 27 ;
+    BalanceType.Type balance_type = 28;
+    TransactionType.Type type = 29;
+    string currency_unit = 30;
+    Money amount = 31;
+    Money pool_amount = 32;
+    google.protobuf.Timestamp transaction_time  = 33;
+    string meta_data = 34;
+    string external_ref = 35;
+    Money balance = 36;
+    string session = 37;
+    string ip = 38;
+    string path = 39;
+    bool test = 40;
+    int64 exchange_rate_batch_id = 41;
+    int64 login_context_id = 42;
+    int64 campaign_id = 43;
+    repeated int64 report_ids = 50;
+    repeated int64 account_seq_ids = 51;
+    int64 item_id = 52;
+    int64 vendor_id = 53;
+    DeviceType.Type device_type = 54;
+    string device_type_version = 55;
+    OperatingSystem.Os os = 56;
+    string os_version = 57;
+    Platform.Type platform = 58;
+    string platform_ver = 59;
+    Browser.Type browser = 60;
+    int32 browser_ver = 61;
+    string country_code = 62;
+    string country_ip_code = 63;
+    string promotion_code = 64;
+    google.protobuf.Timestamp redirect_time  = 65;
+    google.protobuf.Timestamp login_time  = 66;
+    string region_id = 67;
+    string city = 68;
+    string isp = 69;
+}
