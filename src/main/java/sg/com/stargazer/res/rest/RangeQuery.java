@@ -1,4 +1,4 @@
-package com.rest;
+package sg.com.stargazer.res.rest;
 
 import java.io.OutputStreamWriter;
 import java.time.ZonedDateTime;
@@ -10,12 +10,14 @@ import java.util.stream.Collectors;
 import javax.servlet.ServletOutputStream;
 
 import lombok.extern.slf4j.Slf4j;
+import sg.com.stargazer.res.fdb.DbServer;
+import sg.com.stargazer.res.proto.ProtoField;
+import sg.com.stargazer.res.proto.ProtoService;
+import sg.com.stargazer.res.rest.DayDuration.HourDurationIterator;
+import sg.com.stargazer.res.util.Constant;
 import spark.Response;
 import spark.Route;
 
-import com.Constant;
-import com.DbServer;
-import com.ProtoService;
 import com.apple.foundationdb.KeyValue;
 import com.apple.foundationdb.Transaction;
 import com.apple.foundationdb.async.AsyncIterator;
@@ -25,7 +27,6 @@ import com.apple.foundationdb.tuple.Tuple;
 import com.google.common.collect.Maps;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.util.JsonFormat;
-import com.rest.DayDuration.HourDurationIterator;
 
 @Slf4j
 public class RangeQuery implements Route {
@@ -34,7 +35,7 @@ public class RangeQuery implements Route {
     private Map<String, ProtoField> filerableFields = Maps.newHashMap();
     final DirectoryLayer dir = new DirectoryLayer();
 
-    public RangeQuery(Boolean date, ProtoService protoService, DbServer dbServer) {
+    public RangeQuery(ProtoService protoService, DbServer dbServer) {
         this.protoService = protoService;
         this.dbServer = dbServer;
         protoService.getAllFields().stream().forEach(a -> {
@@ -76,7 +77,7 @@ public class RangeQuery implements Route {
             try {
                 byte[] s = foo.pack(Tuple.from(fromRange, 1L));
                 byte[] e = foo.pack(Tuple.from(toRange, Long.MAX_VALUE));
-                AsyncIterator<KeyValue> range = tr.getRange(s, e).iterator();
+                AsyncIterator<KeyValue> range = tr.getRange(s, e, Integer.MAX_VALUE, true).iterator();
                 while (range.hasNext()) {
                     KeyValue keyValue = range.next();
                     byte[] value = keyValue.getValue();

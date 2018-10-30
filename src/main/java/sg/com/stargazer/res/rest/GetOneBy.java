@@ -1,4 +1,4 @@
-package com.rest;
+package sg.com.stargazer.res.rest;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -13,13 +13,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.codec.binary.Hex;
 
+import sg.com.stargazer.res.fdb.DbServer;
+import sg.com.stargazer.res.proto.ProtoService;
+import sg.com.stargazer.res.util.Constant;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 
-import com.Constant;
-import com.DbServer;
-import com.ProtoService;
 import com.apple.foundationdb.Transaction;
 import com.apple.foundationdb.directory.DirectoryLayer;
 import com.apple.foundationdb.directory.DirectorySubspace;
@@ -61,7 +61,7 @@ public class GetOneBy implements Route {
             List<String> path = Constant.getIdPath(current);
             log.info("try path {} ", path);
             DirectorySubspace directorySubspace = dir.createOrOpen(dbServer.getDb(), path).join();
-            byte[] key = directorySubspace.pack(txId);
+            byte[] key = directorySubspace.pack(Constant.hashId((txId)));
             log.info("key for tx id {}  is {} , {} ", txId, key, Hex.encodeHexString(key));
             CompletableFuture<byte[]> data = tr.get(key);
             try {
@@ -77,44 +77,20 @@ public class GetOneBy implements Route {
 
     @Override
     public Object handle(Request request, Response res) throws Exception {
-        String id = request.queryParams("id");
-        if (id != null) {
-            getByTxId(res, id);
+        String id = request.params(":id");
+        if (getByTxId(res, id)) {
             return null;
         }
-        String ext = request.queryParams("ext");
-        if (ext != null) {
-            Transaction tr = dbServer.getDb().createTransaction();
-            byte[] key = getExtKey(tr, ext);
-            ServletOutputStream out = res.raw().getOutputStream();
-            try {
-                CompletableFuture<byte[]> data = tr.get(key);
-                byte[] dt = data.get(1, TimeUnit.SECONDS);
-                res.status(200);
-                res.type("application/json");
-                DynamicMessage dynamicMessage = protoService.getMessage(dt);
-                log.info("found message {} ", dynamicMessage);
-                OutputStreamWriter streamWriter = new OutputStreamWriter(out);
-                JsonFormat.printer().appendTo(dynamicMessage, streamWriter);
-                streamWriter.flush();
-                out.close();
-            } catch (Exception e) {
-                res.status(404);
-                res.type("application/json");
-                e.printStackTrace();
-                out.close();
-            } finally {
-                tr.close();
-            }
-        }
-        return null;
-    }
-
-    private void getByTxId(Response res, String id) throws IOException {
-        Long txId = Long.valueOf(id);
-        Transaction tr = dbServer.getDb().createTransaction();
-        byte[] key = getIdKey(tr, txId);
+        String ext = id;
         ServletOutputStream out = res.raw().getOutputStream();
+        Transaction tr = dbServer.getDb().createTransaction();
+        byte[] key = getExtKey(tr, ext);
+        if (key == null) {
+            res.status(404);
+            res.type("application/json");
+            out.close();
+            return null;
+        }
         try {
             CompletableFuture<byte[]> data = tr.get(key);
             byte[] dt = data.get(1, TimeUnit.SECONDS);
@@ -131,6 +107,43 @@ public class GetOneBy implements Route {
             res.type("application/json");
             e.printStackTrace();
             out.close();
+        } finally {
+            tr.close();
+        }
+        return null;
+    }
+
+    private Boolean getByTxId(Response res, String id) throws IOException {
+        Long txId;
+        try {
+            txId = Long.valueOf(id);
+        } catch (Exception e) {
+            return false;
+        }
+        Transaction tr = dbServer.getDb().createTransaction();
+        byte[] key = getIdKey(tr, txId);
+        if (key == null) {
+            return false;
+        }
+        ServletOutputStream out = res.raw().getOutputStream();
+        try {
+            CompletableFuture<byte[]> data = tr.get(key);
+            byte[] dt = data.get(1, TimeUnit.SECONDS);
+            res.status(200);
+            res.type("application/json");
+            DynamicMessage dynamicMessage = protoService.getMessage(dt);
+            log.info("found message {} ", dynamicMessage);
+            OutputStreamWriter streamWriter = new OutputStreamWriter(out);
+            JsonFormat.printer().appendTo(dynamicMessage, streamWriter);
+            streamWriter.flush();
+            out.close();
+            return true;
+        } catch (Exception e) {
+            res.status(404);
+            res.type("application/json");
+            e.printStackTrace();
+            out.close();
+            return false;
         } finally {
             tr.close();
         }

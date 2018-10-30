@@ -1,4 +1,4 @@
-package com.rest;
+package sg.com.stargazer.res.rest;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,8 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
-
-import com.Constant;
+import sg.com.stargazer.res.util.Constant;
 
 /**
  * Iterable date hour by given start end time

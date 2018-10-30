@@ -1,4 +1,4 @@
-package com.rest;
+package sg.com.stargazer.res.proto;
 
 import lombok.ToString;
 

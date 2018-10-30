@@ -1,4 +1,4 @@
-package com.rest;
+package sg.com.stargazer.res.rest;
 
 import spark.Request;
 

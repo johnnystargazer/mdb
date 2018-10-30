@@ -1,4 +1,4 @@
-package com.rest;
+package sg.com.stargazer.res.rest;
 
 import java.time.LocalDate;
 import java.time.ZoneId;

@@ -1,10 +1,10 @@
-package com;
+package sg.com.stargazer.res.fdb;
 
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
+import sg.com.stargazer.res.util.Constant;
 
 import com.apple.foundationdb.Database;
 import com.apple.foundationdb.FDB;
@@ -25,7 +25,6 @@ public class DbServer {
             List<String> main = Constant.getRangePath(ZonedDateTime.now());
             List<String> sub = dir.list(tx, main).join();
             sub.stream().forEach(a -> {
-                log.info("sub {} ", a);
                 List<String> x = Lists.newArrayList(main);
                 x.add(a);
                 Range range = dir.open(tx, x).join().range();

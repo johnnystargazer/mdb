@@ -1,7 +1,8 @@
-package com.rest;
+package sg.com.stargazer.res.rest;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import sg.com.stargazer.res.proto.ProtoField;
 
 import com.google.protobuf.DynamicMessage;
 

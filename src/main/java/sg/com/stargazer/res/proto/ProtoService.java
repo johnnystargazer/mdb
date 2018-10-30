@@ -1,4 +1,4 @@
-package com;
+package sg.com.stargazer.res.proto;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -14,14 +14,12 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.rest.ProtoField;
 
 @Slf4j
 public class ProtoService {
     private FileDescriptorSet fileDescriptorSet;
     private Descriptor type;
     private Map<String, ProtoField> fieldDescriptors;
-    
 
     public List<ProtoField> getAllFields() {
         return Lists.newArrayList(fieldDescriptors.values());

@@ -1,4 +1,4 @@
-package com;
+package sg.com.stargazer.res.util;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -7,11 +7,18 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 
 public class Constant {
     public static final DateTimeFormatter DATE_PATTERN = DateTimeFormatter.ofPattern("yyyyMMdd");
     public static final DateTimeFormatter MONTH_PATTERN = DateTimeFormatter.ofPattern("yyyyMM");
     public static final ZoneId ZONE_ID = ZoneId.of("UTC");
+    private static final HashFunction HF = Hashing.murmur3_128();
+
+    public static byte[] hashId(Long id) {
+        return HF.newHasher().putLong(id).hash().asBytes();
+    }
 
     public static ZonedDateTime fromParameter(String parameter) {
         LocalDate localDate = LocalDate.parse(parameter, DATE_PATTERN);

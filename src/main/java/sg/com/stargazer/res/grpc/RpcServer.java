@@ -1,4 +1,4 @@
-package com;
+package sg.com.stargazer.res.grpc;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -10,6 +10,10 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
+import sg.com.stargazer.res.fdb.DbServer;
+import sg.com.stargazer.res.proto.ProtoField;
+import sg.com.stargazer.res.proto.ProtoService;
+import sg.com.stargazer.res.util.Constant;
 
 import com.apple.foundationdb.Transaction;
 import com.apple.foundationdb.directory.DirectoryLayer;
@@ -21,7 +25,6 @@ import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Empty;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Timestamp;
-import com.rest.ProtoField;
 
 @Slf4j
 public class RpcServer extends ProtoServiceGrpc.ProtoServiceImplBase {
@@ -81,8 +84,7 @@ public class RpcServer extends ProtoServiceGrpc.ProtoServiceImplBase {
                     // ==================================
                     List<String> idPath = Constant.getIdPath(time);
                     DirectorySubspace idSpace = dir.createOrOpen(tx, idPath).join();
-                    byte[] key = idSpace.pack(idValue);
-                    tx.set(idSpace.pack(idValue), rangeKey);
+                    tx.set(idSpace.pack(Constant.hashId((Long) idValue)), rangeKey);
                     // =================================
                     List<String> extPath = Constant.getExtPath(time);
                     DirectorySubspace extSpace = dir.createOrOpen(tx, extPath).join();
