@@ -96,6 +96,7 @@ public class RpcServer extends ProtoServiceGrpc.ProtoServiceImplBase {
             public void onError(Throwable t) {
                 // log.error("grpc failed ", t);
                 tx.cancel();
+                tx.close();
             }
 
             @Override
@@ -103,6 +104,7 @@ public class RpcServer extends ProtoServiceGrpc.ProtoServiceImplBase {
                 try {
                     // log.info("commit transaction ");
                     tx.commit();
+                    tx.close();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

@@ -21,6 +21,7 @@ public class ProtoService {
     private FileDescriptorSet fileDescriptorSet;
     private Descriptor type;
     private Map<String, ProtoField> fieldDescriptors;
+    
 
     public List<ProtoField> getAllFields() {
         return Lists.newArrayList(fieldDescriptors.values());
