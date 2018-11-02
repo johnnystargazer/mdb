@@ -1,6 +1,8 @@
 package sg.com.stargazer.client;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -13,16 +15,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 @Data
-@Getter
-@Setter
 @Slf4j
 public class ClientConfig {
     private String base = "/home/pdcc/workspace/proto";
@@ -30,6 +28,20 @@ public class ClientConfig {
     private ZonedDateTime start;
     private ZonedDateTime stop;
     private ScheduledExecutorService exec = Executors.newScheduledThreadPool(4);
+    private URL url;
+    private ZoneId TIMEZONE = ZoneId.of("UTC");
+
+    public void setUrl(String url) throws MalformedURLException {
+        this.url = new URL(url);
+    }
+
+    public void setStart(String start) {
+        this.start = LocalDateTime.from(FORMAT.parse(start)).atZone(TIMEZONE);
+    }
+
+    public void setStop(String stop) {
+        this.stop = LocalDateTime.from(FORMAT.parse(stop)).atZone(TIMEZONE);
+    }
 
     public List<File> getFileByTime(Integer partition) {
         File b = new File(base);
@@ -86,10 +98,8 @@ public class ClientConfig {
 
     public static void main(String[] args) {
         ClientConfig clientConfig = new ClientConfig();
-        ZonedDateTime start = ZonedDateTime.of(2018, 10, 1, 0, 50, 0, 0, ZoneId.of("UTC"));
-        ZonedDateTime stop = ZonedDateTime.of(2018, 12, 1, 1, 0, 0, 0, ZoneId.of("UTC"));
-        clientConfig.setStart(start);
-        clientConfig.setStop(stop);
+        clientConfig.setStart("2018-10-01T00:00:00");
+        clientConfig.setStop("2018-12-01T00:00:00");
         List<File> fs = clientConfig.getFileByTime(0);
         log.info("found {} ", fs);
     }

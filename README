@@ -3,6 +3,6 @@ mvn clean install
 server will read from default fdb.cluster connect to mdb
 
 
-run com.Start to start the vm
-run com.Client to send the data
+run sg.com.stargazer.res.ServerStart to start the vm
+run sg.com.stargazer.client.ClientStart to send the data
 

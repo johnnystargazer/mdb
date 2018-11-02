@@ -1,10 +1,10 @@
 package sg.com.stargazer.client;
 
 import java.io.IOException;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -15,10 +15,13 @@ import com.google.common.base.Stopwatch;
 public class ClientStart {
     public static void main(String[] args) throws IOException, InterruptedException {
         ClientConfig clientConfig = new ClientConfig();
-        ZonedDateTime start = ZonedDateTime.of(2018, 10, 1, 0, 50, 0, 0, ZoneId.of("UTC"));
-        ZonedDateTime stop = ZonedDateTime.of(2018, 12, 1, 1, 0, 0, 0, ZoneId.of("UTC"));
-        clientConfig.setStart(start);
-        clientConfig.setStop(stop);
+        Properties properties = new Properties();
+        InputStream intput = ClientStart.class.getClassLoader().getResourceAsStream("client-config.properties");
+        properties.load(intput);
+        intput.close();
+        clientConfig.setStart((String) properties.get("start"));
+        clientConfig.setStop((String) properties.get("end"));
+        clientConfig.setUrl((String) properties.get("restUrl"));
         List<Thread> t = new ArrayList<>();
         for (int i = 0; i < 12; i++) {
             ClientPartition clientPartition = new ClientPartition(i, clientConfig);
@@ -34,5 +37,6 @@ public class ClientStart {
         }
         clientConfig.shutdown();
         log.info(" in {} sec ", time.elapsed(TimeUnit.SECONDS));
+        
     }
 }

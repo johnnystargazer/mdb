@@ -5,6 +5,7 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -21,13 +22,13 @@ public class Client {
     ProtoServiceStub aync;
     private AtomicBoolean available = new AtomicBoolean(true);
 
-    public Client(String host, int port) {
-        channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+    public Client(URL url) {
+        channel = ManagedChannelBuilder.forAddress(url.getHost(), url.getPort()).usePlaintext().build();
         aync = ProtoServiceGrpc.newStub(channel);
     }
 
     public void shutdown() throws InterruptedException {
-        channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+        channel.shutdown().awaitTermination(1, TimeUnit.SECONDS);
     }
 
     private io.grpc.stub.StreamObserver<com.google.protobuf.Empty> newStreamer() {
@@ -78,7 +79,7 @@ public class Client {
             client.onCompleted();
             shutdown();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("complete failed", e);
         }
     }
 }

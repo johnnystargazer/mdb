@@ -24,8 +24,8 @@ public class ClientPartition implements Runnable {
     private List<File> files;
     private AtomicLong atomicLong = new AtomicLong(0);
 
-    static Client newClient() throws IOException {
-        Client client = new Client("localhost", 8080);
+    private Client newClient() throws IOException {
+        Client client = new Client(clientConfig.getUrl());
         client.start();
         return client;
     }
