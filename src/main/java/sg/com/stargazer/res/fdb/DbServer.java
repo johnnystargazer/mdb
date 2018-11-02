@@ -37,6 +37,17 @@ public class DbServer {
         }
     }
 
+    public void cleanAll() {
+        try {
+            Transaction tx = db.createTransaction();
+            tx.clear(new Range(new byte[] { Byte.MIN_VALUE }, new byte[] { Byte.MAX_VALUE }));
+            tx.commit();
+            tx.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void cleanTxByPath(List<String> path) {
         Transaction tx = db.createTransaction();
         DirectorySubspace sub = dir.createOrOpen(tx, path).join();

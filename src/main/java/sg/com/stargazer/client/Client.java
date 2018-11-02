@@ -4,26 +4,15 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Base64;
-import java.util.Enumeration;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import lombok.extern.slf4j.Slf4j;
 
 import com.dashur.mdb.ProtoServiceGrpc;
 import com.dashur.mdb.ProtoServiceGrpc.ProtoServiceStub;
 import com.dashur.mdb.Tx.Request;
-import com.google.common.base.Stopwatch;
-import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
 
 @Slf4j
@@ -51,10 +40,13 @@ public class Client {
 
                 @Override
                 public void onError(Throwable t) {
+                    log.error("exception when commit", t);
+                    available.set(true);
                 }
 
                 @Override
                 public void onCompleted() {
+                    log.info(" === complete ==");
                 }
             };
         return x;
@@ -73,15 +65,20 @@ public class Client {
     }
 
     public void complete() {
-        stream.onCompleted();
-        available.set(false);
-        while (!available.get()) {
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        try {
+            stream.onCompleted();
+            available.set(false);
+            while (!available.get()) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
+            client.onCompleted();
+            shutdown();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        client.onCompleted();
     }
 }

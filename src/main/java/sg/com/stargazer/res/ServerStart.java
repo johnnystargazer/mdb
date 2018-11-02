@@ -23,7 +23,7 @@ public class ServerStart {
     static public void main(String[] args) throws Exception {
         DbServer dbServer = new DbServer();
         dbServer.start();
-        dbServer.cleanTx();
+        dbServer.cleanAll();
         InputStream stream = ServerStart.class.getClassLoader().getResourceAsStream("test.protoset");
         ProtoService protoService = new ProtoService(stream);
         get("/tx/:id", new RangeQuery(protoService, dbServer));
