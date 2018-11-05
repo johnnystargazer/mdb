@@ -1,4 +1,4 @@
-package sg.com.stargazer.client;
+package sg.com.stargazer.client.feed;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,37 +18,37 @@ import com.dashur.mdb.Tx.Request;
 import com.google.protobuf.ByteString;
 
 @Slf4j
-public class ClientPartition implements Runnable {
-    private Integer partition;
-    private ClientConfig clientConfig;
-    private List<File> files;
-    private AtomicLong atomicLong = new AtomicLong(0);
+public abstract class BaseClientPartition extends Thread {
+    Integer partition;
+    ClientConfig clientConfig;
+    List<File> files;
+    AtomicLong atomicLong = new AtomicLong(0);
 
-    private Client newClient() throws IOException {
-        Client client = new Client(clientConfig.getUrl());
-        client.start();
-        return client;
+    public long getCount() {
+        return atomicLong.get();
     }
 
-    public ClientPartition(Integer partition, ClientConfig clientConfig) {
+    public abstract TxConsumer newClient() throws IOException;
+
+    public BaseClientPartition(Integer partition, ClientConfig clientConfig) {
         this.partition = partition;
         this.clientConfig = clientConfig;
         this.files = clientConfig.getFileByTime(partition);
     }
 
-    public void start() throws ZipException, IOException {
+    public void startTask() throws ZipException, IOException, InterruptedException {
         log.info("sending {} for partition {} ", files, partition);
         for (File file : files) {
             ZipFile zip = new ZipFile(file);
-            Client client = newClient();
+            TxConsumer client = newClient();
             for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements();) {
                 ZipEntry entry = e.nextElement();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(zip.getInputStream(entry)));
                 String thisLine = null;
                 while ((thisLine = reader.readLine()) != null) {
                     long count = atomicLong.incrementAndGet();
-                    if (count % 1000 == 0) {
-                        Client oldClient = client;
+                    if (count % 500 == 0) {
+                        TxConsumer oldClient = client;
                         clientConfig.execute(new Runnable() {
                             @Override
                             public void run() {
@@ -56,13 +56,18 @@ public class ClientPartition implements Runnable {
                             }
                         });
                         client = newClient();
+                    }
+                    try {
                         byte[] bs = Base64.getDecoder().decode(thisLine);
                         Request request = Request.newBuilder().setProtobuf(ByteString.copyFrom(bs)).build();
-                        client.onNext(request);
+                        client.onNext(request, bs);
+                    } catch (Exception il) {
+                        il.printStackTrace();
+                        log.info("failed to decode");
                     }
                 }
             }
-            Client oldClient = client;
+            TxConsumer oldClient = client;
             clientConfig.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -77,8 +82,8 @@ public class ClientPartition implements Runnable {
     @Override
     public void run() {
         try {
-            start();
-        } catch (IOException e) {
+            startTask();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

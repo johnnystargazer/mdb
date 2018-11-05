@@ -7,41 +7,29 @@ import io.grpc.stub.StreamObserver;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 import sg.com.stargazer.res.fdb.DbServer;
-import sg.com.stargazer.res.proto.ProtoField;
+import sg.com.stargazer.res.fdb.TxProcessor;
 import sg.com.stargazer.res.proto.ProtoService;
-import sg.com.stargazer.res.util.Constant;
 
 import com.apple.foundationdb.Transaction;
-import com.apple.foundationdb.directory.DirectoryLayer;
-import com.apple.foundationdb.directory.DirectorySubspace;
-import com.apple.foundationdb.tuple.Tuple;
 import com.dashur.mdb.ProtoServiceGrpc;
 import com.dashur.mdb.Tx.Request;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Empty;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Timestamp;
 
 @Slf4j
 public class RpcServer extends ProtoServiceGrpc.ProtoServiceImplBase {
     public DbServer dbServer;
     private ProtoService protoService;
-    private ProtoField id;
-    private ProtoField accountId;
-    private ProtoField externalRef;
-    private ProtoField created;
+    private TxProcessor txProcessor;
 
     public RpcServer(DbServer dbServer, ProtoService protoService) {
         this.dbServer = dbServer;
         this.protoService = protoService;
-        id = protoService.getFieldDescriptorByName("id");
-        accountId = protoService.getFieldDescriptorByName("account_id");
-        externalRef = protoService.getFieldDescriptorByName("external_ref");
-        created = protoService.getFieldDescriptorByName("created");
+        this.txProcessor = new TxProcessor(dbServer, protoService);
     }
 
     public static ZonedDateTime zonedDatetime(Timestamp timestamp) {
@@ -57,46 +45,37 @@ public class RpcServer extends ProtoServiceGrpc.ProtoServiceImplBase {
 
     @Override
     public void one(Request request, StreamObserver<Empty> responseObserver) {
-        String[] path = request.getPathList().toArray(new String[request.getPathList().size()]);
-        responseObserver.onCompleted();
+        try {
+            Transaction tx = dbServer.getDb().createTransaction();
+            byte[] bs = request.getProtobuf().toByteArray();
+            DynamicMessage dynamicMessage = protoService.getMessage(bs);
+            txProcessor.process(tx, dynamicMessage, bs);
+            tx.commit();
+            responseObserver.onNext(Empty.newBuilder().build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public StreamObserver<Request> many(StreamObserver<Empty> responseObserver) {
         Transaction tx = dbServer.getDb().createTransaction();
-        final DirectoryLayer dir = new DirectoryLayer();
         return new StreamObserver<Request>() {
             @Override
-            public void onNext(Request point) {
+            public void onNext(Request request) {
                 try {
-                    byte[] bs = point.getProtobuf().toByteArray();
+                    byte[] bs = request.getProtobuf().toByteArray();
                     DynamicMessage dynamicMessage = protoService.getMessage(bs);
-                    Object idValue = id.getValuefromMessage(dynamicMessage);
-                    Object accountIdValue = accountId.getValuefromMessage(dynamicMessage);//
-                    String exter = (String) externalRef.getValuefromMessage(dynamicMessage);
-                    DynamicMessage dt = (DynamicMessage) created.getValuefromMessage(dynamicMessage);
-                    ZonedDateTime time = zonedDatetime(Timestamp.parseFrom(dt.toByteArray()));
-                    List<String> path = Constant.getRangePath(time, (Long) accountIdValue);
-                    DirectorySubspace foo = dir.createOrOpen(tx, path).join();
-                    Long millsec = time.toInstant().toEpochMilli();
-                    byte[] rangeKey = foo.pack(Tuple.from(millsec, idValue));
-                    tx.set(rangeKey, bs);
-                    // ==================================
-                    List<String> idPath = Constant.getIdPath(time);
-                    DirectorySubspace idSpace = dir.createOrOpen(tx, idPath).join();
-                    tx.set(idSpace.pack(Constant.hashId((Long) idValue)), rangeKey);
-                    // =================================
-                    List<String> extPath = Constant.getExtPath(time);
-                    DirectorySubspace extSpace = dir.createOrOpen(tx, extPath).join();
-                    tx.set(extSpace.pack(exter), rangeKey);
-                } catch (InvalidProtocolBufferException e) {
+                    txProcessor.process(tx, dynamicMessage, bs);
+                } catch (Exception e) {
+                    //
                     e.printStackTrace();
                 }
             }
 
             @Override
             public void onError(Throwable t) {
-                // log.error("grpc failed ", t);
                 tx.cancel();
                 tx.close();
             }
@@ -104,7 +83,6 @@ public class RpcServer extends ProtoServiceGrpc.ProtoServiceImplBase {
             @Override
             public void onCompleted() {
                 try {
-                    // log.info("commit transaction ");
                     tx.commit();
                     tx.close();
                 } catch (Exception e) {

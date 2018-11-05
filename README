@@ -1,8 +1,25 @@
-mvn clean install
+1 install mdb client library
+
+2 mvn clean install
+
+3 start server 
+
+mvn exec:java -Pserver 	
 
 server will read from default fdb.cluster connect to mdb
 
+4 mvn exec:java -Pclient
 
-run sg.com.stargazer.res.ServerStart to start the vm
-run sg.com.stargazer.client.ClientStart to send the data
+start push data
 
+
+
+client-config.properties
+
+can config start , end time and rest url
+
+start = 2018-10-01T00:00:00
+
+end = 2018-12-01T00:00:00
+
+restUrl = http://localhost:8080

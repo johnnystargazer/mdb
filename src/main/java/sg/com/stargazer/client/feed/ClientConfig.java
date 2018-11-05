@@ -1,4 +1,4 @@
-package sg.com.stargazer.client;
+package sg.com.stargazer.client.feed;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -10,33 +10,79 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import com.dashur.mdb.Tx;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 @Data
 @Slf4j
 public class ClientConfig {
-    private String base = "/home/pdcc/workspace/proto";
+    private String base;
     private DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd['T']HH:mm:ss");
     private ZonedDateTime start;
+    private Long startSec;
+    private ZonedDateTime startAt = ZonedDateTime.now();
+    private Long startAtSec = startAt.toEpochSecond();
     private ZonedDateTime stop;
-    private ScheduledExecutorService exec = Executors.newScheduledThreadPool(4);
+    private Long timeDiff;
+    private Double speed;
+    ListeningExecutorService service = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(10));
     private URL url;
     private ZoneId TIMEZONE = ZoneId.of("UTC");
+    private Long batchSec = 5L;
+    private CountDownLatch countDownLatch = new CountDownLatch(18);
+    final Lock lock = new ReentrantLock();
+    final Condition notFull = lock.newCondition();
+
+    /**
+     * 
+     * @param transaction
+     * @return seconds for wait
+     */
+    public long scheduleAfter(Tx.Transaction transaction) {
+        if (speed <= 0) {
+            return -1;
+        }
+        // current time
+        long sec = transaction.getCreated().getSeconds();
+        long realDiff = sec - startSec;
+        long now = ZonedDateTime.now().toEpochSecond();
+        long timePassed = now + batchSec - startAtSec;
+        return Double.valueOf((timePassed * speed - realDiff) / speed).longValue();
+    }
 
     public void setUrl(String url) throws MalformedURLException {
         this.url = new URL(url);
     }
 
+    public void setPath(String path) {
+        this.base = path;
+    }
+
+    public void setSpeed(String speed) {
+        this.speed = Double.valueOf(speed);
+    }
+
     public void setStart(String start) {
         this.start = LocalDateTime.from(FORMAT.parse(start)).atZone(TIMEZONE);
+        this.startSec = this.start.toEpochSecond();
+        this.timeDiff = this.startAt.toEpochSecond() - this.start.toEpochSecond();
     }
 
     public void setStop(String stop) {
@@ -104,12 +150,57 @@ public class ClientConfig {
         log.info("found {} ", fs);
     }
 
-    public void execute(Runnable runnable) {
-        exec.execute(runnable);
+    private int count;
+    private int max = 12;
+
+    // MAX 12 batch
+    public void execute(Runnable runnable) throws InterruptedException {
+        try {
+            lock.lock();
+            while (count == max) {
+                notFull.await();
+            }
+            ++count;
+            ListenableFuture future = service.submit(runnable);
+            Futures.addCallback(future, new FutureCallback<Object>() {
+                @Override
+                public void onSuccess(Object result) {
+                    try {
+                        lock.lock();
+                        --count;
+                        notFull.signal();
+                    } finally {
+                        lock.unlock();
+                    }
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    try {
+                        lock.lock();
+                        --count;
+                        notFull.signal();
+                    } finally {
+                        lock.unlock();
+                    }
+                }
+            });
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void shutdown() throws InterruptedException {
-        exec.shutdown();
-        exec.awaitTermination(1, TimeUnit.MINUTES);
+        service.shutdown();
+        service.awaitTermination(1, TimeUnit.MINUTES);
+    }
+
+    private SharedClient sharedClient;
+
+    public SharedClient getSharedClient() {
+        if (sharedClient == null) {
+            return new SharedClient(url);
+        }
+        return null;
     }
 }

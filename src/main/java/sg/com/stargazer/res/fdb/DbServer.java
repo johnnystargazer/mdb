@@ -56,6 +56,10 @@ public class DbServer {
         tx.close();
     }
 
+    public Transaction newTransaction() {
+        return db.createTransaction();
+    }
+
     public Database getDb() {
         return db;
     }

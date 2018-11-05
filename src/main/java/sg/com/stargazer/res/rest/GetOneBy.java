@@ -82,16 +82,15 @@ public class GetOneBy implements Route {
             return null;
         }
         String ext = id;
-        ServletOutputStream out = res.raw().getOutputStream();
         Transaction tr = dbServer.getDb().createTransaction();
         byte[] key = getExtKey(tr, ext);
         if (key == null) {
             res.status(404);
             res.type("application/json");
-            out.close();
-            return null;
+            return "Not found";
         }
         try {
+            ServletOutputStream out = res.raw().getOutputStream();
             CompletableFuture<byte[]> data = tr.get(key);
             byte[] dt = data.get(1, TimeUnit.SECONDS);
             res.status(200);
@@ -105,8 +104,6 @@ public class GetOneBy implements Route {
         } catch (Exception e) {
             res.status(404);
             res.type("application/json");
-            e.printStackTrace();
-            out.close();
         } finally {
             tr.close();
         }
@@ -125,8 +122,8 @@ public class GetOneBy implements Route {
         if (key == null) {
             return false;
         }
-        ServletOutputStream out = res.raw().getOutputStream();
         try {
+            ServletOutputStream out = res.raw().getOutputStream();
             CompletableFuture<byte[]> data = tr.get(key);
             byte[] dt = data.get(1, TimeUnit.SECONDS);
             res.status(200);
@@ -142,7 +139,6 @@ public class GetOneBy implements Route {
             res.status(404);
             res.type("application/json");
             e.printStackTrace();
-            out.close();
             return false;
         } finally {
             tr.close();

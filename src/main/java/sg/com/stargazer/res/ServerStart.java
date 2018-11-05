@@ -12,6 +12,7 @@ import sg.com.stargazer.res.fdb.DbServer;
 import sg.com.stargazer.res.grpc.RpcServer;
 import sg.com.stargazer.res.proto.ProtoService;
 import sg.com.stargazer.res.rest.GetOneBy;
+import sg.com.stargazer.res.rest.Import;
 import sg.com.stargazer.res.rest.RangeQuery;
 
 import com.google.common.collect.ImmutableList;
@@ -23,11 +24,11 @@ public class ServerStart {
     static public void main(String[] args) throws Exception {
         DbServer dbServer = new DbServer();
         dbServer.start();
-        dbServer.cleanAll();
         InputStream stream = ServerStart.class.getClassLoader().getResourceAsStream("test.protoset");
         ProtoService protoService = new ProtoService(stream);
-        get("/tx/:id", new RangeQuery(protoService, dbServer));
-        get("/tx", new GetOneBy(protoService, dbServer));
+        get("/tx/:id", new GetOneBy(protoService, dbServer));
+        get("/tx", new RangeQuery(protoService, dbServer));
+        get("/import", new Import(protoService, dbServer));
         RpcServer rpcServer = new RpcServer(dbServer, protoService);
         rpcServer.start();
     }
