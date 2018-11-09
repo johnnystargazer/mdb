@@ -23,3 +23,8 @@ start = 2018-10-01T00:00:00
 end = 2018-12-01T00:00:00
 
 restUrl = http://localhost:8080
+
+
+docker build -t fdb-client .
+
+docker run   -v /etc/foundationdb:/etc/foundationdb   fdb-client   /opt/fdb-clean/clean_tx_fdb.py  --time 201809

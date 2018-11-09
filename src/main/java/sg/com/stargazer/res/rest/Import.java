@@ -1,5 +1,6 @@
 package sg.com.stargazer.res.rest;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -43,10 +44,12 @@ public class Import implements Route {
         InputStream intput = ClientStart.class.getClassLoader().getResourceAsStream("client-config.properties");
         properties.load(intput);
         intput.close();
+        File file = new File(".");
         clientConfig.setStart((String) properties.get("start"));
         clientConfig.setStop((String) properties.get("end"));
         clientConfig.setUrl((String) properties.get("restUrl"));
         clientConfig.setSpeed((String) properties.get("speed"));
+        clientConfig.setPath((String) properties.getOrDefault("dataPath", file.getAbsoluteFile()));
         List<BaseClientPartition> t = new ArrayList<>();
         for (int i = 0; i < 12; i++) {
             BaseClientPartition clientPartition = new BaseClientPartition(i, clientConfig) {
