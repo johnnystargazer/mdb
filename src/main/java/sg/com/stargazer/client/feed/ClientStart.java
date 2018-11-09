@@ -26,7 +26,7 @@ public class ClientStart {
         clientConfig.setUrl((String) properties.get("restUrl"));
         clientConfig.setSpeed((String) properties.get("speed"));
         File file = new File(".");
-        clientConfig.setBase((String) properties.getOrDefault("dataPath", file.getAbsoluteFile()));
+        clientConfig.setPath((String) properties.getOrDefault("dataPath", file.getAbsoluteFile()));
         List<GrpcClientPartition> t = new ArrayList<>();
         for (int i = 0; i < 12; i++) {
             GrpcClientPartition clientPartition = new GrpcClientPartition(i, clientConfig);
