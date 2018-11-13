@@ -49,7 +49,8 @@ public class Import implements Route {
         clientConfig.setStop((String) properties.get("end"));
         clientConfig.setUrl((String) properties.get("restUrl"));
         clientConfig.setSpeed((String) properties.get("speed"));
-        clientConfig.setPath((String) properties.getOrDefault("dataPath", file.getAbsoluteFile()));
+        clientConfig.setPath((String) properties.getOrDefault("dataPath", file.getAbsoluteFile().getParentFile()
+            .getPath()));
         List<BaseClientPartition> t = new ArrayList<>();
         for (int i = 0; i < 12; i++) {
             BaseClientPartition clientPartition = new BaseClientPartition(i, clientConfig) {
@@ -88,7 +89,7 @@ public class Import implements Route {
             thread.join();
         }
         clientConfig.shutdown();
-        log.info(" in {} sec ", time.elapsed(TimeUnit.SECONDS));
+        log.info("total in {} sec ", time.elapsed(TimeUnit.SECONDS));
         run.set(false);
     }
 

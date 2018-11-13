@@ -11,6 +11,7 @@ import java.io.InputStream;
 import sg.com.stargazer.res.fdb.DbServer;
 import sg.com.stargazer.res.grpc.RpcServer;
 import sg.com.stargazer.res.proto.ProtoService;
+import sg.com.stargazer.res.rest.DynamicMessageResponseTransformer;
 import sg.com.stargazer.res.rest.GetOneBy;
 import sg.com.stargazer.res.rest.Import;
 import sg.com.stargazer.res.rest.RangeQuery;
@@ -27,9 +28,15 @@ public class ServerStart {
         InputStream stream = ServerStart.class.getClassLoader().getResourceAsStream("test.protoset");
         ProtoService protoService = new ProtoService(stream);
         get("/tx/:id", new GetOneBy(protoService, dbServer));
-        get("/tx", new RangeQuery(protoService, dbServer));
+        get("/tx", new RangeQuery(protoService, dbServer), new DynamicMessageResponseTransformer());
         get("/import", new Import(protoService, dbServer));
         RpcServer rpcServer = new RpcServer(dbServer, protoService);
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                dbServer.shutdown();
+            }
+        });
         rpcServer.start();
     }
 }

@@ -8,7 +8,6 @@ import sg.com.stargazer.res.util.Constant;
 
 import com.apple.foundationdb.Database;
 import com.apple.foundationdb.FDB;
-import com.apple.foundationdb.Range;
 import com.apple.foundationdb.Transaction;
 import com.apple.foundationdb.directory.DirectoryLayer;
 import com.apple.foundationdb.directory.DirectorySubspace;
@@ -19,18 +18,21 @@ public class DbServer {
     private Database db;
     final DirectoryLayer dir = new DirectoryLayer();
 
+    public void shutdown() {
+        this.db.close();
+    }
+
     public void cleanTx() {
         try {
             Transaction tx = db.createTransaction();
             List<String> main = Constant.getRangePath(ZonedDateTime.now());
             List<String> sub = dir.list(tx, main).join();
             sub.stream().forEach(a -> {
-                List<String> x = Lists.newArrayList(main);
-                x.add(a);
-                Range range = dir.open(tx, x).join().range();
-                tx.clear(range);
-                tx.commit();
+                List<String> arr = Lists.newArrayList(main);
+                arr.add(a);
+                dir.remove(db, arr);
             });
+            tx.commit();
             tx.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -40,7 +42,10 @@ public class DbServer {
     public void cleanAll() {
         try {
             Transaction tx = db.createTransaction();
-            tx.clear(new Range(new byte[] { Byte.MIN_VALUE }, new byte[] { Byte.MAX_VALUE }));
+            List<String> subs = dir.list(db).join();
+            for (String path : subs) {
+                dir.remove(db, Lists.newArrayList(path));
+            }
             tx.commit();
             tx.close();
         } catch (Exception e) {
