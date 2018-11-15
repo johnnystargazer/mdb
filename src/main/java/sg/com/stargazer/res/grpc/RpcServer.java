@@ -97,4 +97,8 @@ public class RpcServer extends ProtoServiceGrpc.ProtoServiceImplBase {
             }
         };
     }
+
+    public void stop() {
+        // TODO Auto-generated method stub
+    }
 }

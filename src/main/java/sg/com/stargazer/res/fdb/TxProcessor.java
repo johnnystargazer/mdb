@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import lombok.extern.slf4j.Slf4j;
 import sg.com.stargazer.res.proto.ProtoField;
 import sg.com.stargazer.res.proto.ProtoService;
 import sg.com.stargazer.res.util.Constant;
@@ -21,6 +22,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Timestamp;
 
+@Slf4j
 public class TxProcessor {
     public DbServer dbServer;
     private ProtoField id;
@@ -62,6 +64,7 @@ public class TxProcessor {
 
     public void process(Transaction tx, DynamicMessage dynamicMessage, byte[] bs) throws Exception {
         Object idValue = id.getValuefromMessage(dynamicMessage);
+        log.info("id {} ", idValue);
         Object accountIdValue = accountId.getValuefromMessage(dynamicMessage);//
         String exter = (String) externalRef.getValuefromMessage(dynamicMessage);
         DynamicMessage dt = (DynamicMessage) created.getValuefromMessage(dynamicMessage);
@@ -77,6 +80,9 @@ public class TxProcessor {
         tx.set(idSpace.pack(Constant.hashId((Long) idValue)), rangeKey);
 // tx.set(idSpace.pack(idValue), rangeKey);
         // =================================
+        /**
+         * not support append data in java api , better force unique ext id
+         */
         List<String> extPath = Constant.getExtPath(time);
         DirectorySubspace extSpace = loadingCache.get(extPath);
         tx.set(extSpace.pack(exter), rangeKey);

@@ -5,6 +5,10 @@ import java.net.URL;
 import com.dashur.mdb.Tx;
 import com.dashur.mdb.Tx.Transaction;
 
+/**
+ * Have't implement yet
+ *
+ */
 public class SharedClient extends Client {
     private ClientConfig clientConfig;
 

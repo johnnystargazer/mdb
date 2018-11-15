@@ -53,6 +53,9 @@ public class DbServer {
         }
     }
 
+    /**
+     * clean data in path , but directory still exists
+     */
     public void cleanTxByPath(List<String> path) {
         Transaction tx = db.createTransaction();
         DirectorySubspace sub = dir.createOrOpen(tx, path).join();

@@ -1,18 +1,17 @@
 package sg.com.stargazer.res.rest;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
-import javax.servlet.ServletOutputStream;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.codec.binary.Hex;
 
+import sg.com.stargazer.res.exception.HttpException;
 import sg.com.stargazer.res.fdb.DbServer;
 import sg.com.stargazer.res.proto.ProtoService;
 import sg.com.stargazer.res.util.Constant;
@@ -24,7 +23,6 @@ import com.apple.foundationdb.Transaction;
 import com.apple.foundationdb.directory.DirectoryLayer;
 import com.apple.foundationdb.directory.DirectorySubspace;
 import com.google.protobuf.DynamicMessage;
-import com.google.protobuf.util.JsonFormat;
 
 @Slf4j
 public class GetOneBy implements Route {
@@ -78,68 +76,47 @@ public class GetOneBy implements Route {
     @Override
     public Object handle(Request request, Response res) throws Exception {
         String id = request.params(":id");
-        if (getByTxId(res, id)) {
-            return null;
+        Optional<DynamicMessage> byId = getByTxId(res, id);
+        if (byId.isPresent()) {
+            return byId.get();
         }
         String ext = id;
         Transaction tr = dbServer.getDb().createTransaction();
         byte[] key = getExtKey(tr, ext);
         if (key == null) {
-            res.status(404);
-            res.type("application/json");
-            return "Not found";
+            throw new HttpException(404, "Not found");
         }
         try {
-            ServletOutputStream out = res.raw().getOutputStream();
             CompletableFuture<byte[]> data = tr.get(key);
             byte[] dt = data.get(1, TimeUnit.SECONDS);
-            res.status(200);
-            res.type("application/json");
             DynamicMessage dynamicMessage = protoService.getMessage(dt);
-            log.info("found message {} ", dynamicMessage);
-            OutputStreamWriter streamWriter = new OutputStreamWriter(out);
-            JsonFormat.printer().appendTo(dynamicMessage, streamWriter);
-            streamWriter.flush();
-            out.close();
+            return dynamicMessage;
         } catch (Exception e) {
-            res.status(404);
-            res.type("application/json");
+            throw new HttpException(500, e.getMessage());
         } finally {
             tr.close();
         }
-        return null;
     }
 
-    private Boolean getByTxId(Response res, String id) throws IOException {
+    private Optional<DynamicMessage> getByTxId(Response res, String id) throws IOException {
         Long txId;
         try {
             txId = Long.valueOf(id);
         } catch (Exception e) {
-            return false;
+            return Optional.empty();
         }
         Transaction tr = dbServer.getDb().createTransaction();
         byte[] key = getIdKey(tr, txId);
         if (key == null) {
-            return false;
+            return Optional.empty();
         }
         try {
-            ServletOutputStream out = res.raw().getOutputStream();
             CompletableFuture<byte[]> data = tr.get(key);
             byte[] dt = data.get(1, TimeUnit.SECONDS);
-            res.status(200);
-            res.type("application/json");
             DynamicMessage dynamicMessage = protoService.getMessage(dt);
-            log.info("found message {} ", dynamicMessage);
-            OutputStreamWriter streamWriter = new OutputStreamWriter(out);
-            JsonFormat.printer().appendTo(dynamicMessage, streamWriter);
-            streamWriter.flush();
-            out.close();
-            return true;
+            return Optional.of(dynamicMessage);
         } catch (Exception e) {
-            res.status(404);
-            res.type("application/json");
-            e.printStackTrace();
-            return false;
+            throw new HttpException(500, e.getMessage());
         } finally {
             tr.close();
         }
