@@ -7,6 +7,8 @@ import io.grpc.stub.StreamObserver;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 import sg.com.stargazer.res.fdb.DbServer;
@@ -83,13 +85,15 @@ public class RpcServer extends ProtoServiceGrpc.ProtoServiceImplBase {
             @Override
             public void onCompleted() {
                 try {
-                    tx.commit();
+                    CompletableFuture<Void> future = tx.commit();
+                    future.get(10, TimeUnit.SECONDS);
                     tx.close();
+                    responseObserver.onNext(Empty.newBuilder().build());
+                    responseObserver.onCompleted();
                 } catch (Exception e) {
                     e.printStackTrace();
+                    responseObserver.onError(e);
                 }
-                responseObserver.onNext(Empty.newBuilder().build());
-                responseObserver.onCompleted();
             }
         };
     }

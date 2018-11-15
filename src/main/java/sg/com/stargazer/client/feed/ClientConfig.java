@@ -73,6 +73,7 @@ public class ClientConfig {
 
     public void setPath(String path) {
         this.base = path;
+        log.info("path {} ", path);
     }
 
     public void setSpeed(String speed) {
