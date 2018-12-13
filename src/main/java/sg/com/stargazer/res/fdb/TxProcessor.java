@@ -56,15 +56,16 @@ public class TxProcessor {
                 Transaction ts = dbServer.newTransaction();
                 CompletableFuture<DirectorySubspace> res = dir.createOrOpen(ts, key);
                 DirectorySubspace result = res.join();
-                ts.commit();
+                ts.commit().get();
                 ts.close();
                 return result;
             }
         });
+    private int i = 0;
 
     public void process(Transaction tx, DynamicMessage dynamicMessage, byte[] bs) throws Exception {
         Object idValue = id.getValuefromMessage(dynamicMessage);
-        log.info("id {} ", idValue);
+// log.info("id {} ", idValue);
         Object accountIdValue = accountId.getValuefromMessage(dynamicMessage);//
         String exter = (String) externalRef.getValuefromMessage(dynamicMessage);
         DynamicMessage dt = (DynamicMessage) created.getValuefromMessage(dynamicMessage);
@@ -77,13 +78,19 @@ public class TxProcessor {
         // ==================================
         List<String> idPath = Constant.getIdPath(time);
         DirectorySubspace idSpace = loadingCache.get(idPath);
-        tx.set(idSpace.pack(Constant.hashId((Long) idValue)), rangeKey);
+        byte[] key = idSpace.pack(Constant.hashId((Long) idValue));
+        tx.set(key, rangeKey);
 // tx.set(idSpace.pack(idValue), rangeKey);
         // =================================
+        List<String> extPath = Constant.getExtPath(time);
         /**
          * not support append data in java api , better force unique ext id
          */
-        List<String> extPath = Constant.getExtPath(time);
+        if (i < 100) {
+            log.info("account {} , id {} , id path {}  , ext {} , ext path {}  , data {} , id key {} ", accountIdValue,
+                idValue, idPath, exter, extPath, dynamicMessage, key);
+            i++;
+        }
         DirectorySubspace extSpace = loadingCache.get(extPath);
         tx.set(extSpace.pack(exter), rangeKey);
     }

@@ -9,7 +9,6 @@ import lombok.experimental.Wither;
 import com.google.common.collect.Maps;
 
 @Value
-@Wither
 public class TokenUser {
     public static final String ACCOUNT_ID = "aid";
     public static final String ACCOUNT_NAME = "an";

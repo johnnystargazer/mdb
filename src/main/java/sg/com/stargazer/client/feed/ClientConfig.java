@@ -106,11 +106,15 @@ public class ClientConfig {
         Map<ZonedDateTime, File> maps = Maps.newLinkedHashMap();
         for (File file : files) {
             String name = file.getName();
-            LocalDateTime date =
-                LocalDateTime.from(FORMAT.parse(name.substring(name.indexOf("-", name.indexOf("-") + 1) + 1,
-                    name.length() - 5)));
-            ZonedDateTime time = date.atZone(ZoneId.of("UTC"));
-            maps.put(time, file);
+            try {
+                LocalDateTime date =
+                    LocalDateTime.from(FORMAT.parse(name.substring(name.indexOf("-", name.indexOf("-") + 1) + 1,
+                        name.length() - 5)));
+                ZonedDateTime time = date.atZone(ZoneId.of("UTC"));
+                maps.put(time, file);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         List<File> fs = Lists.newLinkedList();
         List<ZonedDateTime> keys = Lists.newArrayList(maps.keySet());

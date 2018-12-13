@@ -8,6 +8,8 @@ import io.netty.handler.ssl.ApplicationProtocolConfig.Protocol;
 import io.netty.handler.ssl.ApplicationProtocolConfig.SelectedListenerFailureBehavior;
 import io.netty.handler.ssl.ApplicationProtocolConfig.SelectorFailureBehavior;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.InputStream;
 
 import sg.com.stargazer.res.exception.ErrorModel;
@@ -33,7 +35,20 @@ public class ServerStart {
         Boolean security = Boolean.FALSE;
         ObjectMapper objectMapper = new ObjectMapper();
         DbServer dbServer = new DbServer();
-        dbServer.start();
+        String clusterInfo = System.getenv("FDB_CLUSTER");
+        if (clusterInfo != null) {
+            File file = new File("cluster_info");
+            FileWriter fileWriter = new FileWriter(file);
+            fileWriter.write(clusterInfo);
+            fileWriter.flush();
+            fileWriter.close();
+            dbServer.start(file.getAbsolutePath());
+        } else {
+            dbServer.start(null);
+        }
+        dbServer.list();
+        dbServer.test();
+        // //hT4GheYX:LK4nCVQb@127.0.0.1:4500
         InputStream stream = ServerStart.class.getClassLoader().getResourceAsStream("test.protoset");
         ProtoService protoService = new ProtoService(stream);
         get("/tx/:id", new GetOneBy(protoService, dbServer), new DynamicMessageResponseTransformer());
