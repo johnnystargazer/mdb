@@ -1,0 +1,71 @@
+jcmd 8 JFR.start name=Recording-1 duration=1m filename=/tmp/record.jfr
+
+
+
+
+transaction-service-c474f56bf-7dbd9    0/1       Running   0          17s
+transaction-service-c474f56bf-blsgb    0/1       Running   0          17s
+transaction-service-c474f56bf-k755f    0/1       Running   0          17s
+transaction-service-c474f56bf-pjtpz    0/1       Running   0          17s
+transaction-service-c474f56bf-rrtks    0/1       Running   0          17s
+transaction-service-c474f56bf-t88rv    0/1       Running   0          17s
+transaction-service-c474f56bf-zxsgv    0/1       Running   0          17s
+
+
+kubectl --namespace dev get pod -l app=transaction-service -o name |  cut -f2 -d/  | xargs  -L 1 -I % kubectl --namespace dev exec  %  -- jcmd 8 JFR.start name=tx-recording  duration=60s filename=/tmp/%.jfr
+
+
+kubectl --namespace dev get pod -l app=transaction-service -o name |  cut -f2 -d/  | xargs  -L 1 -I % kubectl --namespace dev cp %:/tmp/%.jfr /tmp/%.jfr
+
+
+kubectl --namespace dev get pod -l app=transaction-service -o name |  cut -f2 -d/  | xargs  -L 1 -I % kubectl exec % -- ls /tmp
+
+
+#kubectl --namespace dev get pod -l app=transaction-service -o name | cut -f2 -d/ | xargs -n 1 bash -c 'kubectl exec $@ -ls /tmp'
+
+kubectl --namespace dev cp transaction-service-c474f56bf-7dbd9:/tmp/tx.jfr /tmp/tx.jfr
+
+
+kubectl --namespace dev exec  transaction-service-c474f56bf-7dbd9    -- jcmd 8 JFR.start name=tx-recording  duration=600s filename=/tmp/tx.jfr
+kubectl --namespace dev exec  transaction-service-c474f56bf-blsgb    -- jcmd 8 JFR.start name=tx-recording  duration=600s filename=/tmp/tx.jfr
+kubectl --namespace dev exec  transaction-service-c474f56bf-k755f    -- jcmd 8 JFR.start name=tx-recording  duration=600s filename=/tmp/tx.jfr
+kubectl --namespace dev exec  transaction-service-c474f56bf-pjtpz    -- jcmd 8 JFR.start name=tx-recording  duration=600s filename=/tmp/tx.jfr
+kubectl --namespace dev exec  transaction-service-c474f56bf-rrtks    -- jcmd 8 JFR.start name=tx-recording  duration=600s filename=/tmp/tx.jfr
+kubectl --namespace dev exec  transaction-service-c474f56bf-t88rv    -- jcmd 8 JFR.start name=tx-recording  duration=600s filename=/tmp/tx.jfr
+kubectl --namespace dev exec  transaction-service-c474f56bf-zxsgv    -- jcmd 8 JFR.start name=tx-recording  duration=600s filename=/tmp/tx.jfr
+
+
+devsup@h1-dev-man02
+
+# restart pod
+kubectl --namespace dev delete -f /tmp/tx.yaml
+kubectl --namespace dev apply -f /tmp/tx.yaml
+
+# setup jprofile
+kubectl --namespace dev cp /tmp/profile.xml tx-test:/tmp/profile.xml
+kubectl --namespace dev  cp /tmp/jprofiler_linux_10_1.tar.gz  tx-test:/tmp/j.tar.gz
+kubectl --namespace dev exec tx-test -- tar zxvf /tmp/j.tar.gz -C /tmp/
+
+# start jvm with jprofile
+kubectl --namespace dev exec tx-test -- /opt/jdk/bin/java -agentpath:/tmp/jprofiler10.1/bin/linux-x64/libjprofilerti.so=offline,id=116,config=/tmp/profile.xml  -Xmx2048M -Xms2048M    -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false -Djava.net.preferIPv4Stack=true -XX:+UnlockCommercialFeatures -XX:+FlightRecorder -cp /app/BOOT-INF/classes:/app/BOOT-INF/lib/*:/app/BOOT-INF/lib-das/* com.dashur.rest.transaction.TransactionApp --spring.config.name=auth --spring.config.location=/conf/dashur-2.config.yaml --logging.config=/conf/logback.xml &
+
+
+# start load test and snapshot will record every minute in fist 10 minute
+
+
+# copy snapshot out
+kubectl --namespace dev cp tx-test:/tmp/snapshot.3.jps /tmp/snapshot.3.jps
+
+
+
+kubectl --namespace dev exec -it tx-test bash
+
+
+//\x0a\x00\x00\x00
+
+ \xid key [\x22\x97\x-79\x1\x116\x68\x0\x-1\x-81\x-85\x48\x-33\x73\x2\x29\x-70\x12\x-36\x51\x18\x-27\x0] 
+
+          [22\x97\x-79\x1\x 116\x68\x0\x-1\x-81\x-85\x48\x-33\x73\x2\x29\x-70\x12\x-36\x51\x18\x-27\x0]
+
+
+

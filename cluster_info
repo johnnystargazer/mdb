@@ -1,0 +1,20 @@
+
+
+
+docker run  -p 4567:4567  --name fdb-server  -v /data1/archive:/root  -d -e FDB_CLUSTER='uXQk8Q2P:Hyon0aLN@10.42.3.37:4500,10.42.2.65:4500,10.42.0.32:4500,10.42.9.23:4500,10.42.1.35:4500,10.42.10.32:4500,10.42.7.31:4500' johnnywalee/fdb-test:v1
+
+docker run   -v /etc/foundationdb:/etc/foundationdb   fdb-client   /opt/fdb-clean/clean_tx_fdb.py --time 201810
+ 
+ 
+ 
+ 
+2018-12-13 14:52:37 [Thread-15] INFO  sg.com.stargazer.res.fdb.TxProcessor - account 27034242 , id 9984935428 , ext 15508-35862-51354815605 
+2018-12-13 14:52:37 [Thread-15] INFO  sg.com.stargazer.res.fdb.TxProcessor - account 25783968 , id 9984934209 , ext 15508-11200-51354815862 
+2018-12-13 14:52:37 [Thread-15] INFO  sg.com.stargazer.res.fdb.TxProcessor - account 25162329 , id 9984934860 , ext 15508-78279-51354816238 
+2018-12-13 14:52:37 [Thread-15] INFO  sg.com.stargazer.res.fdb.TxProcessor - account 25162329 , id 9984934370 , ext 15508-78279-51354816239 
+2018-12-13 14:52:37 [Thread-15] INFO  sg.com.stargazer.res.fdb.TxProcessor - account 25162329 , id 9984932345 , ext 15508-78279-0 
+2018-12-13 14:52:37 [Thread-15] INFO  sg.com.stargazer.res.fdb.TxProcessor - account 32288164 , id 9984932264 , ext 15508-4147-51354815596 
+2018-12-13 14:52:37 [Thread-15] INFO  sg.com.stargazer.res.fdb.TxProcessor - account 32288164 , id 9984934121 , ext 15508-4147-0 
+2018-12-13 14:52:37 [Thread-15] INFO  sg.com.stargazer.res.fdb.TxProcessor - account 32288164 , id 9984936500 , ext 15508-4148-0 
+2018-12-13 14:52:37 [Thread-15] INFO  sg.com.stargazer.res.fdb.TxProcessor - account 32288164 , id 9984936495 , ext 15508-4148-51354816730 
+ 
