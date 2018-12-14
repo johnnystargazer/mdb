@@ -10,7 +10,7 @@ FROM ubuntu:14.04
 # Install.
 RUN \
 	apt-get -y update && \ 
-	apt-get -y install git-core wget software-properties-common && \
+	apt-get -y install git-core wget curl software-properties-common && \
 	echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
     add-apt-repository -y ppa:webupd8team/java && \
 	apt-get update && \
