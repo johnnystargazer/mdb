@@ -46,11 +46,13 @@ public class Import implements Route {
         intput.close();
         File file = new File(".");
         clientConfig.setStart((String) properties.get("start"));
+        clientConfig.setMax(Integer.valueOf((String) properties.getOrDefault("max_task", "12")));
         clientConfig.setStop((String) properties.get("end"));
         clientConfig.setUrl((String) properties.get("restUrl"));
         clientConfig.setSpeed((String) properties.get("speed"));
         clientConfig.setPath((String) properties.getOrDefault("dataPath", file.getAbsoluteFile().getParentFile()
             .getPath()));
+        Integer batch = Integer.valueOf((String) properties.getOrDefault("batch_size", "500"));
         List<BaseClientPartition> t = new ArrayList<>();
         for (int i = 0; i < 12; i++) {
             BaseClientPartition clientPartition = new BaseClientPartition(i, clientConfig) {
@@ -59,6 +61,7 @@ public class Import implements Route {
                     return new FDbConsumer(txProcessor, protoService);
                 }
             };
+            clientPartition.setBatchSize(batch);
             t.add(clientPartition);
         }
         AtomicBoolean run = new AtomicBoolean(true);

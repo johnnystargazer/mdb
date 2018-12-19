@@ -52,7 +52,7 @@ public class RpcServer extends ProtoServiceGrpc.ProtoServiceImplBase {
             byte[] bs = request.getProtobuf().toByteArray();
             DynamicMessage dynamicMessage = protoService.getMessage(bs);
             txProcessor.process(tx, dynamicMessage, bs);
-            tx.commit();
+            tx.commit().get();
             responseObserver.onNext(Empty.newBuilder().build());
             responseObserver.onCompleted();
         } catch (Exception e) {

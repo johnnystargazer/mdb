@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -42,7 +41,7 @@ public class ClientConfig {
     private ZonedDateTime stop;
     private Long timeDiff;
     private Double speed;
-    ListeningExecutorService service = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(10));
+    ListeningExecutorService service = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
     private URL url;
     private ZoneId TIMEZONE = ZoneId.of("UTC");
     private Long batchSec = 5L;

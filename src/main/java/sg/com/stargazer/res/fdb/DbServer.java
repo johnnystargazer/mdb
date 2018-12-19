@@ -33,7 +33,7 @@ public class DbServer {
             sub.stream().forEach(a -> {
                 log.info("directory {} ", a);
             });
-            tx.commit();
+            tx.commit().get();
             tx.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -41,6 +41,7 @@ public class DbServer {
     }
 
     public void test() throws InterruptedException, ExecutionException, TimeoutException {
+        log.info("try connection ");
         Transaction tx = db.createTransaction();
         List<String> t = Lists.newArrayList("test1", "test2");
         DirectorySubspace directorySubspace = dir.createOrOpen(db, t).join();
@@ -48,7 +49,14 @@ public class DbServer {
         tx.set(key, "abc".getBytes());
         CompletableFuture<Void> fu = tx.commit();
         fu.get(1, TimeUnit.MINUTES);
-        System.out.println("finish commit");
+        System.out.println("finish 1 commit");
+        tx.close();
+        tx = db.createTransaction();
+        key = directorySubspace.pack(193L);
+        tx.set(key, "abc".getBytes());
+        fu = tx.commit();
+        fu.get(1, TimeUnit.MINUTES);
+        System.out.println("finish 2 commit");
         tx.close();
         tx = db.createTransaction();
         CompletableFuture<byte[]> future = tx.get(key);
@@ -71,7 +79,7 @@ public class DbServer {
                 arr.add(a);
                 dir.remove(db, arr);
             });
-            tx.commit();
+            tx.commit().get();
             tx.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -85,7 +93,7 @@ public class DbServer {
             for (String path : subs) {
                 dir.remove(db, Lists.newArrayList(path));
             }
-            tx.commit();
+            tx.commit().get();
             tx.close();
         } catch (Exception e) {
             e.printStackTrace();

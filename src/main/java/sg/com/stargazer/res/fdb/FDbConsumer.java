@@ -1,6 +1,5 @@
 package sg.com.stargazer.res.fdb;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +29,7 @@ public class FDbConsumer extends Thread implements TxConsumer {
         try {
             tx.commit().get();
         } catch (Exception e) {
+            // TODO retry
             e.printStackTrace();
         }
 // future.get(10, TimeUnit.SECONDS);

@@ -23,9 +23,15 @@ public abstract class BaseClientPartition extends Thread {
     ClientConfig clientConfig;
     List<File> files;
     AtomicLong atomicLong = new AtomicLong(0);
+    AtomicLong successCount = new AtomicLong(0);
+    Integer batchSize = 500;
+
+    public void setBatchSize(Integer batchSize) {
+        this.batchSize = batchSize;
+    }
 
     public long getCount() {
-        return atomicLong.get();
+        return successCount.get();
     }
 
     public abstract TxConsumer newClient() throws IOException;
@@ -47,12 +53,13 @@ public abstract class BaseClientPartition extends Thread {
                 String thisLine = null;
                 while ((thisLine = reader.readLine()) != null) {
                     long count = atomicLong.incrementAndGet();
-                    if (count % 500 == 0) {
+                    if (count % batchSize == 0) {
                         TxConsumer oldClient = client;
                         clientConfig.execute(new Runnable() {
                             @Override
                             public void run() {
                                 oldClient.complete();
+                                successCount.addAndGet(batchSize);
                             }
                         });
                         client = newClient();
