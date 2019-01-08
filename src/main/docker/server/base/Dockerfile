@@ -44,4 +44,4 @@ EXPOSE 4567 8080
 Run	echo "=== update 1 ===" &&  git config --global user.email "you@example.com" &&  git config --global user.name "Your Name" && cd /tmp/mdb && git pull && mvn clean compile assembly:single 
 
 # Define default command.
-CMD ["java","-jar","/tmp/mdb/target/mdb-0.0.1-SNAPSHOT-jar-with-dependencies.jar"]
+CMD ["java","-jar","/tmp/mdb/target/fdb-0.0.1-SNAPSHOT-jar-with-dependencies.jar"]
