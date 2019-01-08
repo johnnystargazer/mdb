@@ -18,3 +18,6 @@ docker run   -v /etc/foundationdb:/etc/foundationdb   fdb-client   /opt/fdb-clea
 2018-12-13 14:52:37 [Thread-15] INFO  sg.com.stargazer.res.fdb.TxProcessor - account 32288164 , id 9984936500 , ext 15508-4148-0 
 2018-12-13 14:52:37 [Thread-15] INFO  sg.com.stargazer.res.fdb.TxProcessor - account 32288164 , id 9984936495 , ext 15508-4148-51354816730 
  
+ 
+ 
+server.undertow.io-threads:16 \nserver.undertow.worker-threads:256\nserver.undertow.buffer-size:1024\n

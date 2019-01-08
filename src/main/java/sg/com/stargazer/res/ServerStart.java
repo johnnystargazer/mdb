@@ -12,6 +12,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStream;
 
+import org.eclipse.jetty.websocket.common.events.JettyAnnotatedImpl;
+
 import sg.com.stargazer.res.exception.ErrorModel;
 import sg.com.stargazer.res.exception.HttpException;
 import sg.com.stargazer.res.fdb.DbServer;
@@ -48,6 +50,9 @@ public class ServerStart {
         }
         dbServer.list();
         dbServer.test();
+        
+        
+         
         // //hT4GheYX:LK4nCVQb@127.0.0.1:4500
         InputStream stream = ServerStart.class.getClassLoader().getResourceAsStream("test.protoset");
         ProtoService protoService = new ProtoService(stream);

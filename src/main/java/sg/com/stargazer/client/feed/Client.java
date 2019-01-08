@@ -9,12 +9,14 @@ import java.net.URL;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import lombok.extern.slf4j.Slf4j;
 
 import com.dashur.mdb.ProtoServiceGrpc;
 import com.dashur.mdb.ProtoServiceGrpc.ProtoServiceStub;
 import com.dashur.mdb.Tx.Request;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
@@ -25,6 +27,8 @@ public class Client implements TxConsumer {
     ProtoServiceStub aync;
     CountDownLatch latch;
     private URL url;
+    private Stopwatch stopwatch;
+    private Function<Long, Void> callback;
 
     public Client(URL url) {
         this.url = url;
@@ -39,6 +43,11 @@ public class Client implements TxConsumer {
             new io.grpc.stub.StreamObserver<com.google.protobuf.Empty>() {
                 @Override
                 public void onNext(Empty value) {
+                    stopwatch.stop();
+                    long mill = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+                    if (callback != null) {
+                        callback.apply(mill);
+                    }
                     latch.countDown();
                     requests.clear();
                 }
@@ -94,6 +103,7 @@ public class Client implements TxConsumer {
     }
 
     private void push() {
+        stopwatch = Stopwatch.createStarted();
         for (Request request : requests) {
             stream.onNext(request);
         }
@@ -118,5 +128,9 @@ public class Client implements TxConsumer {
         } catch (Exception e) {
             log.error("complete failed", e);
         }
+    }
+
+    public void setCallback(Function<Long, Void> callback) {
+        this.callback = callback;
     }
 }

@@ -35,9 +35,14 @@ public class Constant {
             MONTH_PATTERN.format(zonedDateTime.withZoneSameInstant(ZONE_ID))));
     }
 
-    public static List<String> getRangePath(ZonedDateTime time, Long accountIdValue) {
+    public static List<String> getAccountRangePath(ZonedDateTime time, Long accountIdValue) {
         String timeKey = DATE_PATTERN.format(time);
-        return Lists.newArrayList("Transaction", timeKey, accountIdValue.toString());
+        return Lists.newArrayList("Transaction", timeKey, "Account", accountIdValue.toString());
+    }
+
+    public static List<String> getCompanyRangePath(ZonedDateTime time, Long companyIdValue) {
+        String timeKey = DATE_PATTERN.format(time);
+        return Lists.newArrayList("Transaction", timeKey, "Company", companyIdValue.toString());
     }
 
     public static List<String> getRangePath(ZonedDateTime time) {

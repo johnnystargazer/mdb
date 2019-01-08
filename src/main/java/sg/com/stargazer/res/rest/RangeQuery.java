@@ -71,7 +71,7 @@ public class RangeQuery implements Route {
         out.print("[");
         while (dayIt.hasNext()) {
             ZonedDateTime now = dayIt.next();
-            List<String> path = Constant.getRangePath(now, Long.valueOf(accountId));
+            List<String> path = Constant.getAccountRangePath(now, Long.valueOf(accountId));
             log.info("try {}  path {} ", now, path);
             DirectorySubspace foo = dir.createOrOpen(dbServer.getDb(), path).join();
             try {
