@@ -71,7 +71,6 @@ public class RpcServer extends ProtoServiceGrpc.ProtoServiceImplBase {
                     DynamicMessage dynamicMessage = protoService.getMessage(bs);
                     txProcessor.process(tx, dynamicMessage, bs);
                 } catch (Exception e) {
-                    //
                     e.printStackTrace();
                 }
             }

@@ -1,5 +1,6 @@
 package sg.com.stargazer.res.util;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -9,12 +10,17 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+import com.google.protobuf.Timestamp;
 
 public class Constant {
     public static final DateTimeFormatter DATE_PATTERN = DateTimeFormatter.ofPattern("yyyyMMdd");
     public static final DateTimeFormatter MONTH_PATTERN = DateTimeFormatter.ofPattern("yyyyMM");
     public static final ZoneId ZONE_ID = ZoneId.of("UTC");
     private static final HashFunction HF = Hashing.murmur3_128();
+
+    public static ZonedDateTime zonedDatetime(Timestamp timestamp) {
+        return Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos()).atZone(ZONE_ID);
+    }
 
     public static byte[] hashId(Long id) {
         return HF.newHasher().putLong(id).hash().asBytes();

@@ -38,18 +38,22 @@ public class Client implements TxConsumer {
         channel.shutdown().awaitTermination(1, TimeUnit.SECONDS);
     }
 
+    protected void success() {
+        stopwatch.stop();
+        long mill = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+        if (callback != null) {
+            callback.apply(mill);
+        }
+        latch.countDown();
+        requests.clear();
+    }
+
     private io.grpc.stub.StreamObserver<com.google.protobuf.Empty> newStreamer() {
         io.grpc.stub.StreamObserver<com.google.protobuf.Empty> x =
             new io.grpc.stub.StreamObserver<com.google.protobuf.Empty>() {
                 @Override
                 public void onNext(Empty value) {
-                    stopwatch.stop();
-                    long mill = stopwatch.elapsed(TimeUnit.MILLISECONDS);
-                    if (callback != null) {
-                        callback.apply(mill);
-                    }
-                    latch.countDown();
-                    requests.clear();
+                    success();
                 }
 
                 @Override

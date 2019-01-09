@@ -15,7 +15,7 @@ import com.google.common.base.Stopwatch;
 
 @Slf4j
 public class ClientStart {
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws Exception {
         ClientConfig clientConfig = new ClientConfig();
         Properties properties = new Properties();
         InputStream intput = ClientStart.class.getClassLoader().getResourceAsStream("client-config.properties");
@@ -25,6 +25,7 @@ public class ClientStart {
         clientConfig.setStop((String) properties.get("end"));
         clientConfig.setUrl((String) properties.get("restUrl"));
         clientConfig.setSpeed((String) properties.get("speed"));
+        
         File file = new File(".");
         clientConfig.setPath((String) properties.getOrDefault("dataPath", file.getAbsoluteFile().getParentFile()
             .getAbsolutePath()));

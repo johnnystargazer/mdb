@@ -2,6 +2,7 @@ package sg.com.stargazer.res.fdb;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -20,6 +21,7 @@ import com.google.common.collect.Lists;
 @Slf4j
 public class DbServer {
     private Database db;
+    private List<Database> dbPool = Lists.newArrayList();
     final DirectoryLayer dir = new DirectoryLayer();
 
     public void shutdown() {
@@ -118,13 +120,18 @@ public class DbServer {
         return db.createTransaction();
     }
 
+    private Random random = new Random();
+
     public Database getDb() {
-        return db;
+        return dbPool.get(random.nextInt(10));
     }
 
     public void start(String dbFile) {
         System.out.println("Start with " + dbFile);
         FDB fdb = FDB.selectAPIVersion(520);
         db = fdb.open(dbFile);
+        for (int i = 0; i < 10; i++) {
+            dbPool.add(fdb.open(dbFile));
+        }
     }
 }

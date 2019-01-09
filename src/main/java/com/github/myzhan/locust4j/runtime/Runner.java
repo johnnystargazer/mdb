@@ -16,7 +16,7 @@ import com.github.myzhan.locust4j.Log;
 import com.github.myzhan.locust4j.message.Message;
 import com.github.myzhan.locust4j.rpc.Client;
 import com.github.myzhan.locust4j.stats.Stats;
-import com.github.myzhan.locust4j.utils.Utils;
+import com.google.common.base.Function;
 
 /**
  * Runner is the core role that runs all tasks, collects test results and reports to the master.
@@ -68,6 +68,11 @@ public class Runner {
      * Use this for naming threads in the thread pool.
      */
     private AtomicInteger threadNumber = new AtomicInteger();
+    private Function<Void, Void> runnerShutdownHook;
+
+    public void setRunnerShutdownHook(Function<Void, Void> runnerShutdownHook) {
+        this.runnerShutdownHook = runnerShutdownHook;
+    }
 
     public Runner(String nodeID) {
         this.nodeID = nodeID;
@@ -228,6 +233,9 @@ public class Runner {
                 try {
                     this.rpcClient.send(new Message("client_stopped", null, this.nodeID));
                     this.rpcClient.send(new Message("client_ready", null, this.nodeID));
+                    if (runnerShutdownHook != null) {
+                        runnerShutdownHook.apply(null);
+                    }
                 } catch (IOException ex) {
                     Log.error(ex);
                 }

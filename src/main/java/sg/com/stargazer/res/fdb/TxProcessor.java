@@ -1,7 +1,5 @@
 package sg.com.stargazer.res.fdb;
 
-import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -46,10 +44,6 @@ public class TxProcessor {
         created = protoService.getFieldDescriptorByName("created");
     }
 
-    public static ZonedDateTime zonedDatetime(Timestamp timestamp) {
-        return Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos()).atZone(ZoneId.systemDefault());
-    }
-
     /**
      * very slow if not cache
      */
@@ -68,12 +62,11 @@ public class TxProcessor {
 
     public void process(Transaction tx, DynamicMessage dynamicMessage, byte[] bs) throws Exception {
         Object idValue = id.getValuefromMessage(dynamicMessage);
-// log.info("id {} ", idValue);
         Object accountIdValue = accountId.getValuefromMessage(dynamicMessage);//
         Object compnayIdValue = companyId.getValuefromMessage(dynamicMessage);//
         String exter = (String) externalRef.getValuefromMessage(dynamicMessage);
         DynamicMessage dt = (DynamicMessage) created.getValuefromMessage(dynamicMessage);
-        ZonedDateTime time = zonedDatetime(Timestamp.parseFrom(dt.toByteArray()));
+        ZonedDateTime time = Constant.zonedDatetime(Timestamp.parseFrom(dt.toByteArray()));
         Long millsec = time.toInstant().toEpochMilli();
         // for
         List<String> path = Constant.getCompanyRangePath(time, (Long) compnayIdValue);
@@ -83,6 +76,7 @@ public class TxProcessor {
         // ==================================
         indexId(tx, idValue, time, companyRangeKey);
         indexExtref(tx, exter, time, companyRangeKey);
+        indexAccount(tx, (Long) accountIdValue, time, companyRangeKey, millsec, (Long) idValue);
         /**
          * not support append data in java api , better force unique ext id
          */

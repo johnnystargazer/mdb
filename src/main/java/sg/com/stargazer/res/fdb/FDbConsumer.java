@@ -29,10 +29,8 @@ public class FDbConsumer extends Thread implements TxConsumer {
         try {
             tx.commit().get();
         } catch (Exception e) {
-            // TODO retry
             e.printStackTrace();
         }
-// future.get(10, TimeUnit.SECONDS);
         tx.close();
         log.info("commit tx for batch in {} ms", watch.elapsed(TimeUnit.MILLISECONDS));
     }

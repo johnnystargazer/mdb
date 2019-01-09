@@ -12,6 +12,7 @@ import com.github.myzhan.locust4j.runtime.Runner;
 import com.github.myzhan.locust4j.stats.RequestFailure;
 import com.github.myzhan.locust4j.stats.RequestSuccess;
 import com.github.myzhan.locust4j.stats.Stats;
+import com.google.common.base.Function;
 
 /**
  * Locust class exposes all the APIs of locust4j.
@@ -129,6 +130,12 @@ public class Locust {
      */
     public void run(String nodeID, AbstractTask... tasks) {
         run(nodeID, Arrays.asList(tasks));
+    }
+
+    public void setRunnerShutdownHook(Function<Void, Void> runnerShutdownHook) {
+        if (this.runner != null) {
+            this.runner.setRunnerShutdownHook(runnerShutdownHook);
+        }
     }
 
     /**

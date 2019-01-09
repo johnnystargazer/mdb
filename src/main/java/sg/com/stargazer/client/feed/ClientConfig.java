@@ -43,6 +43,7 @@ public class ClientConfig {
     private Double speed;
     ListeningExecutorService service = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
     private URL url;
+    private URL queryUrl;
     private ZoneId TIMEZONE = ZoneId.of("UTC");
     private Long batchSec = 5L;
     private CountDownLatch countDownLatch = new CountDownLatch(18);
@@ -64,6 +65,10 @@ public class ClientConfig {
         long now = ZonedDateTime.now().toEpochSecond();
         long timePassed = now + batchSec - startAtSec;
         return Double.valueOf((timePassed * speed - realDiff) / speed).longValue();
+    }
+
+    public void setQueryUrl(String url) throws MalformedURLException {
+        this.queryUrl = new URL(url);
     }
 
     public void setUrl(String url) throws MalformedURLException {

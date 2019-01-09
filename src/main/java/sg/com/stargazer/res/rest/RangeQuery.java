@@ -39,7 +39,7 @@ public class RangeQuery implements Route {
         this.protoService = protoService;
         this.dbServer = dbServer;
         protoService.getAllFields().stream().forEach(a -> {
-            if (!"account_id".equals(a.getName())) {
+            if (!"company_id".equals(a.getName())) {
                 filerableFields.put(a.getName(), a);
             }
         });
@@ -50,12 +50,13 @@ public class RangeQuery implements Route {
     public Object handle(spark.Request request, Response res) throws Exception {
         res.status(200);
         res.type("application/json");
-        String accountId = request.queryParams("account_id");
+        String companyId = request.queryParams("company_id");
         Page page = new Page(request);
         DayDuration day =
             DayDuration.of(request.queryParamOrDefault("from", "today"), request.queryParamOrDefault("to", "today"));
         ZonedDateTime from = day.getStart();
         ZonedDateTime to = day.getEnd();
+        log.info("from {} to {} ", from, to);
         long fromRange = from.toInstant().toEpochMilli();
         long toRange = to.toInstant().toEpochMilli();
         DayDuration dayDuration = new DayDuration(from, to);
@@ -71,8 +72,7 @@ public class RangeQuery implements Route {
         out.print("[");
         while (dayIt.hasNext()) {
             ZonedDateTime now = dayIt.next();
-            List<String> path = Constant.getAccountRangePath(now, Long.valueOf(accountId));
-            log.info("try {}  path {} ", now, path);
+            List<String> path = Constant.getCompanyRangePath(now, Long.valueOf(companyId));
             DirectorySubspace foo = dir.createOrOpen(dbServer.getDb(), path).join();
             try {
                 byte[] s = foo.pack(Tuple.from(fromRange, 1L));

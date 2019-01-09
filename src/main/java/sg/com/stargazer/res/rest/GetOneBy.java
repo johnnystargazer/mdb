@@ -42,7 +42,7 @@ public class GetOneBy implements Route {
             List<String> path = Constant.getExtPath(current);
             DirectorySubspace directorySubspace = dir.createOrOpen(dbServer.getDb(), path).join();
             byte[] key = directorySubspace.pack(extRefId);
-            log.info("key for tx id {}  is {} , {}  in path {} ", extRefId, key, Hex.encodeHexString(key), path);
+// log.info("key for tx id {}  is {} , {}  in path {} ", extRefId, key, Hex.encodeHexString(key), path);
             CompletableFuture<byte[]> data = tr.get(key);
             try {
                 byte[] dt = data.get(TIMEOUT, TimeUnit.SECONDS);
@@ -72,12 +72,12 @@ public class GetOneBy implements Route {
             List<String> path = Constant.getIdPath(current);
             DirectorySubspace directorySubspace = dir.createOrOpen(dbServer.getDb(), path).join();
             byte[] key = directorySubspace.pack(Constant.hashId((txId)));
-            log.info("key for tx id {}  is {} , {}  in path {} ", txId, key, Hex.encodeHexString(key), path);
+// log.info("key for tx id {}  is {} , {}  in path {} ", txId, key, Hex.encodeHexString(key), path);
             CompletableFuture<byte[]> data = tr.get(key);
             try {
                 byte[] dt = data.get(TIMEOUT, TimeUnit.SECONDS);
                 if (dt != null) {
-                    log.info("found key ", Hex.encodeHexString(dt));
+// log.info("found key ", Hex.encodeHexString(dt));
                     return dt;
                 }
             } catch (Exception e) {

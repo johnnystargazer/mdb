@@ -64,14 +64,7 @@ public abstract class BaseClientPartition extends Thread {
                         });
                         client = newClient();
                     }
-                    try {
-                        byte[] bs = Base64.getDecoder().decode(thisLine);
-                        Request request = Request.newBuilder().setProtobuf(ByteString.copyFrom(bs)).build();
-                        client.onNext(request, bs);
-                    } catch (Exception il) {
-                        il.printStackTrace();
-                        log.info("failed to decode");
-                    }
+                    process(client, thisLine);
                 }
             }
             TxConsumer oldClient = client;
@@ -84,6 +77,17 @@ public abstract class BaseClientPartition extends Thread {
             zip.close();
         }
         log.info("total send {} for partition {} ", atomicLong, partition);
+    }
+
+    protected void process(TxConsumer client, String thisLine) {
+        try {
+            byte[] bs = Base64.getDecoder().decode(thisLine);
+            Request request = Request.newBuilder().setProtobuf(ByteString.copyFrom(bs)).build();
+            client.onNext(request, bs);
+        } catch (Exception il) {
+            il.printStackTrace();
+            log.info("failed to decode");
+        }
     }
 
     @Override

@@ -1,0 +1,3 @@
+FROM swernst/locusts
+
+

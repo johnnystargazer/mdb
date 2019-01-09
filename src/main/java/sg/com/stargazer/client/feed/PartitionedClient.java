@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,7 +11,7 @@ import com.github.myzhan.locust4j.AbstractTask;
 import com.github.myzhan.locust4j.Locust;
 import com.github.myzhan.locust4j.taskset.AbstractTaskSet;
 import com.github.myzhan.locust4j.taskset.WeighingTaskSet;
-import com.google.common.base.Stopwatch;
+import com.google.common.base.Function;
 
 @Slf4j
 public class PartitionedClient {
@@ -32,10 +30,11 @@ public class PartitionedClient {
         clientConfig.setStop((String) properties.get("end"));
         clientConfig.setUrl((String) properties.get("restUrl"));
         clientConfig.setSpeed((String) properties.get("speed"));
+        clientConfig.setQueryUrl((String) properties.getProperty("queryUrl"));
         File file = new File(".");
         clientConfig.setPath((String) properties.getOrDefault("dataPath", file.getAbsoluteFile().getParentFile()
             .getAbsolutePath()));
-        clientConfig.setMax(2);
+        clientConfig.setMax(10);
         AbstractTaskSet taskSet = new WeighingTaskSet("test", 100);
         taskSet.addTask(new AbstractTask() {
             @Override
@@ -52,39 +51,28 @@ public class PartitionedClient {
             public void execute() throws Exception {
                 GrpcClientPartition clientPartition = new GrpcClientPartition(partition, clientConfig) {
                     public Void apply(Long t) {
-                        Locust.getInstance().recordSuccess("test", "partition-" + partition, t, 1);
-                        Locust.getInstance().recordSuccess("test", "partition-all", t, 1);
+                        Locust.getInstance().recordSuccess("batch-500", "partition-" + partition, t, 1);
+                        Locust.getInstance().recordSuccess("batch-500", "partition-all", t, 1);
                         return null;
                     }
                 };
-                Stopwatch time = Stopwatch.createStarted();
-                AtomicBoolean run = new AtomicBoolean(true);
-                Thread monitor = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (;;) {
-                            try {
-                                Thread.sleep(10000);
-                                long count = clientPartition.getCount();
-                                long sec = time.elapsed(TimeUnit.SECONDS);
-                                log.info(" processed {} in {} sec , speed  {} /sec ", count, sec, count / (sec * 1.0));
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                            if (!run.get()) {
-                                break;
-                            }
-                        }
-                    }
-                });
-                clientPartition.start();
-                monitor.start();
-                clientPartition.join();
-                clientConfig.shutdown();
-                log.info(" in {} sec ", time.elapsed(TimeUnit.SECONDS));
-                run.set(false);
+                for (;;) {
+                    clientPartition.start();
+                    clientPartition.join();
+                }
             }
         });
         locust.run("simulator_" + partition, taskSet);
+        locust.setRunnerShutdownHook(new Function<Void, Void>() {
+            @Override
+            public Void apply(Void input) {
+                try {
+                    clientConfig.shutdown();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        });
     }
 }
