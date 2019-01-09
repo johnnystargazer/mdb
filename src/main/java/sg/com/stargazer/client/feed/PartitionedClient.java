@@ -18,8 +18,9 @@ import com.google.common.base.Stopwatch;
 @Slf4j
 public class PartitionedClient {
     public static void main(String[] args) throws IOException, InterruptedException {
-        Integer partition = 1;
+        Integer partition = Integer.valueOf(args[1]);
         Locust locust = Locust.getInstance();
+        locust.setMasterHost(args[0]);
         locust.setVerbose(true);
         locust.setMaxRPS(1000);
         ClientConfig clientConfig = new ClientConfig();
@@ -51,7 +52,8 @@ public class PartitionedClient {
             public void execute() throws Exception {
                 GrpcClientPartition clientPartition = new GrpcClientPartition(partition, clientConfig) {
                     public Void apply(Long t) {
-                        locust.getInstance().recordSuccess("test", "partition-" + partition, t, 1);
+                        Locust.getInstance().recordSuccess("test", "partition-" + partition, t, 1);
+                        Locust.getInstance().recordSuccess("test", "partition-all", t, 1);
                         return null;
                     }
                 };

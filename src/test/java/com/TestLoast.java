@@ -13,7 +13,7 @@ public class TestLoast {
         AbstractTaskSet taskSet = new WeighingTaskSet("test", 1);
         taskSet.addTask(new TestTask("foo", 10));
         taskSet.addTask(new TestTask("bar", 20));
-        locust.run(taskSet);
+        locust.run("1", taskSet);
     }
 
     private static class TestTask extends AbstractTask {
