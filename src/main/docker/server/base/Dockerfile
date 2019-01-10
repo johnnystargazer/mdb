@@ -10,7 +10,7 @@ FROM ubuntu:14.04
 # Install.
 RUN \
 	apt-get -y update && \ 
-	apt-get -y install git-core curl wget software-properties-common && \
+	apt-get -y install git-core curl wget ethtool software-properties-common && \
 	echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
     add-apt-repository -y ppa:webupd8team/java && \
 	apt-get update && \
@@ -37,11 +37,11 @@ ENV PATH "$PATH:/tmp/apache-maven-3.6.0/bin"
 
 ENV FDB_CLUSTER hT4GheYX:LK4nCVQb@192.168.124.247:4500
 
-Run	cd /tmp/mdb && mvn clean compile assembly:single 
+Run	cd /tmp/mdb && mvn clean install 
 
 EXPOSE 4567 8080
 
-Run	echo "=== update 1 ===" &&  git config --global user.email "you@example.com" &&  git config --global user.name "Your Name" && cd /tmp/mdb && git pull && mvn clean compile assembly:single 
+Run	echo "=== update 2 ===" &&  git config --global user.email "you@example.com" &&  git config --global user.name "Your Name" && cd /tmp/mdb && git pull && mvn clean compile assembly:single 
 
 # Define default command.
 CMD ["java","-jar","/tmp/mdb/target/fdb-0.0.1-SNAPSHOT-jar-with-dependencies.jar"]
